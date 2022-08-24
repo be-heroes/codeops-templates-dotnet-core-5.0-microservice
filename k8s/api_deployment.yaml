@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservice-api-deployment
+  namespace: microservice
+  labels:
+    project: beheroes
+    department: development
+    component: microservice
+    app: microservice-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microservice-api
+  template:
+    metadata:
+      labels:
+        project: beheroes
+        department: development
+        component: microservice
+        app: microservice-api
+    spec:
+      containers:
+      - name: microservice-api
+        image: microservice-api-image-uri
+        ports:
+        - containerPort: 5000
+          name: web
+        - containerPort: 8080
+          name: metrics
+        env:
+          - name: Kafka__Configuration__sasl.username
+            valueFrom:
+              secretKeyRef:
+                name: microservice-kafka-credentials
+                key: username
+          - name: Kafka__Configuration__sasl.password
+            valueFrom:
+              secretKeyRef:
+                name: microservice-kafka-credentials
+                key: password
+          - name: ConnectionStrings__ApplicationContext_Host
+            valueFrom:
+              secretKeyRef:
+                name: microservice-rdspostgresql-conn
+                key: endpoint
+          - name: ConnectionStrings__ApplicationContext_Port
+            valueFrom:
+              secretKeyRef:
+                name: microservice-rdspostgresql-conn
+                key: port
+          - name: ConnectionStrings__ApplicationContext_User
+            valueFrom:
+              secretKeyRef:
+                name: microservice-rdspostgresql-conn
+                key: username
+          - name: ConnectionStrings__ApplicationContext_Password
+            valueFrom:
+              secretKeyRef:
+                name: microservice-rdspostgresql-conn
+                key: password
+          - name: ConnectionStrings__ApplicationContext
+            value: "User ID=$(ConnectionStrings__ApplicationContext_User);Password=$(ConnectionStrings__ApplicationContext_Password);Host=$(ConnectionStrings__ApplicationContext_Host);Port=$(ConnectionStrings__ApplicationContext_Port);Database=postgres"
+        resources:
+          requests:
+            memory: "200Mi"
+            cpu: "100m"
+          limits:
+            memory: "400Mi"
+            cpu: "200m"

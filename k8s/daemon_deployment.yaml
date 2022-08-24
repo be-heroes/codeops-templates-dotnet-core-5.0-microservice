@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservice-daemon-deployment
+  namespace: microservice
+  labels:
+    project: beheroes
+    department: development
+    component: microservice
+    app: microservice-daemon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microservice-daemon
+  template:
+    metadata:
+      labels:
+        project: beheroes
+        department: development
+        component: microservice
+        app: microservice-daemon
+    spec:
+      containers:
+      - name: microservice-daemon
+        image: microservice-daemon-image-uri
+        env:
+          - name: Kafka__Configuration__sasl.username
+            valueFrom:
+              secretKeyRef:
+                name: microservice-kafka-credentials
+                key: username
+          - name: Kafka__Configuration__sasl.password
+            valueFrom:
+              secretKeyRef:
+                name: microservice-kafka-credentials
+                key: password
+        resources:
+          requests:
+            memory: "200Mi"
+            cpu: "100m"
+          limits:
+            memory: "400Mi"
+            cpu: "200m"

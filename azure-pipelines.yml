@@ -1,0 +1,52 @@
+# Triggers Pipeline only on Master
+trigger:
+  branches:
+    include:
+    - main
+
+  paths:
+    # Changes to these files does not trigger a new build / release
+    exclude:
+    - README.md
+    - LICENSE
+    - azure-pipelines.yml
+
+# Disables triggering Pipeline run at creation of every Pull Request
+pr: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: Microservice
+
+steps:
+- task: DockerCompose@0
+  displayName: 'Build images'
+  inputs:
+    containerregistrytype: 'Container Registry'
+    dockerComposeFile: 'docker-compose.yml'
+    action: 'Run a Docker Compose command'
+    dockerComposeCommand: 'build'
+    arguments: '--build-arg PAT=$(System.AccessToken)'
+
+#TODO: Push images to target repo
+
+# Replace token values in yaml files with pipeline variables
+- task: qetza.replacetokens.replacetokens-task.replacetokens@3
+  displayName: 'Replace tokens in k8s manifests'
+  inputs:
+    rootDirectory: '$(Build.SourcesDirectory)/k8s/'
+    targetFiles: '*.yaml'
+    tokenPrefix: '#('
+    tokenSuffix: ')'
+
+# Apply Kubernetes manifests
+- task: Kubernetes@1
+  displayName: 'Apply k8s manifests'
+  inputs:
+    connectionType: Kubernetes Service Connection
+    kubernetesServiceEndpoint: 'Kubernetes-Microservice-Deploy'
+    namespace: 'microservice'
+    command: apply
+    arguments: '-f $(Build.SourcesDirectory)/k8s/'
