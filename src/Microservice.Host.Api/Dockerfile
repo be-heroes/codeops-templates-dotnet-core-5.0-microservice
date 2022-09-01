@@ -16,7 +16,7 @@ RUN dpkg-reconfigure --frontend=noninteractive locales && update-locale LANG=en_
 RUN wget -qO- https://raw.githubusercontent.com/Microsoft/artifacts-credprovider/master/helpers/installcredprovider.sh | bash
 
 # set the credential provider variable and run restore.
-RUN sed -i "s|</configuration>|<packageSourceCredentials><dfds-devex-shared><add key=\"Username\" value=\"PAT\" /><add key=\"ClearTextPassword\" value=\"${PAT}\" /></dfds-devex-shared></packageSourceCredentials></configuration>|" nuget.config
+RUN sed -i "s|</configuration>|<packageSourceCredentials><nuget-feed-name><add key=\"Username\" value=\"PAT\" /><add key=\"ClearTextPassword\" value=\"${PAT}\" /></nuget-feed-name></packageSourceCredentials></configuration>|" nuget.config
 
 #Set workdir to current project folder
 WORKDIR /build/src/Microservice.Host.Api
